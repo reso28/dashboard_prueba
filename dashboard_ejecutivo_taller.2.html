@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte Workshop 2026 - Q1</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#f4f3ef;--surf:#fff;--surf2:#eeecea;--bord:#e0ddd8;--bord2:#c8c4be;
+  --navy:#1a2340;--blue:#2563eb;--blue-l:#dbeafe;--blue-m:#93c5fd;
+  --green:#16a34a;--green-l:#dcfce7;--green-m:#86efac;
+  --amber:#d97706;--amber-l:#fef3c7;--amber-m:#fcd34d;
+  --red:#dc2626;--red-l:#fee2e2;--red-m:#fca5a5;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --txt:#1a1a1a;--txt-l:#5e5a54;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif;}
+body{background:var(--bg);color:var(--txt);padding:24px;line-height:1.4;}
+.container{max-width:1400px;margin:0 auto;}
+
+/* Header */
+header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px;border-bottom:2px solid var(--navy);padding-bottom:16px;}
+.h-left h1{font-size:2rem;font-weight:800;letter-spacing:-0.03em;color:var(--navy);text-transform:uppercase;}
+.h-left p{font-weight:600;color:var(--txt-l);font-size:0.9rem;}
+.filter-box select{padding:10px 16px;border-radius:12px;border:2px solid var(--navy);background:var(--surf);font-weight:700;cursor:pointer;outline:none;}
+
+/* KPIs Originales */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-bottom:32px;}
+.k-card{background:var(--surf);padding:20px;border-radius:16px;border:1px solid var(--bord2);position:relative;display:flex;flex-direction:column;justify-content:space-between;min-height:140px;}
+.k-label{font-size:0.7rem;font-weight:800;color:var(--txt-l);text-transform:uppercase;letter-spacing:0.05em;}
+.k-val{font-family:'IBM Plex Mono',monospace;font-size:1.8rem;font-weight:500;color:var(--navy);margin:4px 0;}
+.k-sub{font-size:0.7rem;font-weight:600;}
+.k-bar-bg{height:4px;background:var(--surf2);border-radius:2px;margin-top:12px;overflow:hidden;}
+.k-bar{height:100%;transition:width 1s ease-in-out;}
+
+/* Layout */
+.main-layout{display:grid;grid-template-columns:1fr 340px;gap:20px;margin-bottom:32px;}
+.c-box{background:var(--surf);padding:24px;border-radius:20px;border:1px solid var(--bord2);}
+
+/* Tabla */
+.t-box{background:var(--surf);border-radius:20px;border:1px solid var(--bord2);overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:0.85rem;}
+th{background:var(--navy);color:#fff;text-align:left;padding:12px 16px;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;}
+td{padding:12px 16px;border-bottom:1px solid var(--bord);}
+.t-name{font-weight:800;color:var(--navy);}
+.vac-icon{color:var(--amber);margin-left:5px;cursor:help;font-size:0.9rem;}
+.tag-new{background:var(--purple-l);color:var(--purple);font-size:0.6rem;padding:2px 5px;border-radius:4px;margin-left:5px;font-weight:800;}
+.pill{padding:4px 8px;border-radius:8px;font-weight:800;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;}
+
+@media (max-width:1100px){.main-layout{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="h-left">
+      <h1>Workshop Performance</h1>
+      <p>Source PC 9 · Enero - Marzo 2026</p>
+    </div>
+    <div class="filter-box">
+      <select id="activeMon" onchange="update()">
+        <option value="all">Trimestre Q1</option>
+        <option value="0">Enero</option>
+        <option value="1">Febrero</option>
+        <option value="2">Marzo</option>
+      </select>
+    </div>
+  </header>
+
+  <div class="kpi-grid">
+    <div class="k-card">
+      <div class="k-label">Horas Ejecutadas</div>
+      <div id="kv-h" class="k-val">0</div>
+      <div class="k-sub" style="color:var(--blue)">Suma total</div>
+      <div class="k-bar-bg"><div id="kb-h" class="k-bar" style="background:var(--blue)"></div></div>
+    </div>
+    <div class="k-card">
+      <div class="k-label">Cumplimiento Promedio</div>
+      <div id="kv-p" class="k-val">0%</div>
+      <div class="k-sub" style="color:var(--purple)">Meta 160h/tec</div>
+      <div class="k-bar-bg"><div id="kb-p" class="k-bar" style="background:var(--purple)"></div></div>
+    </div>
+    <div class="k-card">
+      <div class="k-label">Diferencia vs Meta</div>
+      <div id="kv-g" class="k-val">0</div>
+      <div id="kv-g-s" class="k-sub">Horas faltantes</div>
+      <div class="k-bar-bg"><div id="kb-g" class="k-bar" style="background:var(--red)"></div></div>
+    </div>
+    <div class="k-card">
+      <div class="k-label">Total Deliveries</div>
+      <div id="kv-d" class="k-val">0</div>
+      <div class="k-sub" style="color:var(--green)">Feedbacks</div>
+      <div class="k-bar-bg"><div id="kb-d" class="k-bar" style="background:var(--green)"></div></div>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <div class="c-box"><canvas id="ch1"></canvas></div>
+    <div class="c-box"><canvas id="ch2"></canvas></div>
+  </div>
+
+  <div class="t-box">
+    <table id="t-main">
+      <thead>
+        <tr>
+          <th>Técnico</th>
+          <th>Ene</th>
+          <th>Feb</th>
+          <th>Mar</th>
+          <th>Total H</th>
+          <th>Cumplimiento %</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const META = 160;
+const MESES = ["Enero", "Febrero", "Marzo"];
+
+// Datos Oficiales Source PC 9
+const DATA = [
+  { n: "ALEXANDER BALBIN", h: [132, 128, 176], v: [40, 0, 0], d: [22, 21, 32] },
+  { n: "CARLOS AGUIRRE", h: [140, 153.5, 84], v: [0, 0, 80], d: [32, 30, 16] },
+  { n: "EVER ZEGARRA", h: [0, 124.5, 154.5], v: [0, 0, 0], d: [0, 26, 36], joinedFeb: true },
+  { n: "JUAN ESPINOZA", h: [125.5, 105.5, 112.5], v: [16, 0, 0], d: [18, 22, 18] },
+  { n: "JULIO PARIONA", h: [111.5, 80, 125.5], v: [0, 0, 0], d: [31, 24, 28] },
+  { n: "MARCO DE LA CRUZ", h: [73.5, 137.5, 153], v: [96, 0, 0], d: [15, 26, 32] },
+  { n: "SEGUNDO TORRES", h: [0, 131.5, 117], v: [0, 0, 0], d: [0, 48, 26], joinedFeb: true }
+];
+
+let ch1, ch2;
+
+function update() {
+  const sel = document.getElementById('activeMon').value;
+  const idxs = sel === 'all' ? [0, 1, 2] : [parseInt(sel)];
+  
+  let totH = 0, totD = 0, sumPct = 0, nAct = 0;
+  const tbody = document.querySelector('#t-main tbody');
+  tbody.innerHTML = '';
+
+  DATA.forEach(t => {
+    let tH = 0, tD = 0, tP = 0, tM = 0;
+    idxs.forEach(i => {
+      if (i === 0 && t.joinedFeb) return;
+      tH += t.h[i]; tD += t.d[i]; tP += (t.h[i]/META); tM++;
+    });
+
+    if (tM > 0) {
+      const avgP = (tP / tM) * 100;
+      totH += tH; totD += tD; sumPct += avgP; nAct++;
+
+      const r = document.createElement('tr');
+      r.innerHTML = `
+        <td class="t-name">${t.n} ${t.joinedFeb?'<span class="tag-new">FEB</span>':''}</td>
+        ${[0,1,2].map(i => {
+          if(i===0 && t.joinedFeb) return '<td style="color:var(--bord2)">-</td>';
+          return `<td>${t.h[i]}h ${t.v[i]>0?`<span class="vac-icon" title="Vacaciones: ${t.v[i]}h">💼</span>`:''}</td>`;
+        }).join('')}
+        <td style="font-weight:700">${tH.toFixed(1)}h</td>
+        <td><span class="pill ${avgP>=90?'good':avgP>=75?'warn':'bad'}" style="background:${avgP>=90?'var(--green-l)':avgP>=75?'var(--amber-l)':'var(--red-l)'}; color:${avgP>=90?'var(--green)':avgP>=75?'var(--amber)':'var(--red)'}">${avgP.toFixed(1)}%</span></td>
+      `;
+      tbody.appendChild(r);
+    }
+  });
+
+  // KPIs
+  const finalPct = sumPct / nAct;
+  document.getElementById('kv-h').textContent = totH.toFixed(1);
+  document.getElementById('kb-h').style.width = Math.min(100, (totH/(nAct*idxs.length*META))*100)+'%';
+  
+  document.getElementById('kv-p').textContent = finalPct.toFixed(1) + '%';
+  document.getElementById('kb-p').style.width = Math.min(100, finalPct) + '%';
+
+  const metaTotal = nAct * idxs.length * META;
+  const gap = metaTotal - totH;
+  document.getElementById('kv-g').textContent = gap.toFixed(0);
+  document.getElementById('kv-g').style.color = gap > 0 ? 'var(--red)' : 'var(--green)';
+  document.getElementById('kb-g').style.width = Math.min(100, (Math.abs(gap)/metaTotal)*100)+'%';
+
+  document.getElementById('kv-d').textContent = totD;
+  document.getElementById('kb-d').style.width = Math.min(100, (totD/(30*nAct))*100)+'%';
+
+  renderCharts(idxs);
+}
+
+function renderCharts(idxs) {
+  const labels = DATA.map(t => t.n.split(' ')[1]);
+  const hData = DATA.map(t => {
+    let s = 0; idxs.forEach(i => { if(!(i===0 && t.joinedFeb)) s += t.h[i]; });
+    return s;
+  });
+  const dData = DATA.map(t => {
+    let s = 0; idxs.forEach(i => s += t.d[i]);
+    return s;
+  });
+
+  if (ch1) ch1.destroy();
+  if (ch2) ch2.destroy();
+
+  ch1 = new Chart(document.getElementById('ch1'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{ label: 'Horas', data: hData, backgroundColor: '#1a2340', borderRadius: 8 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'PRODUCTIVIDAD POR TÉCNICO', font: {size: 14, weight: '800'} } } }
+  });
+
+  ch2 = new Chart(document.getElementById('ch2'), {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{ data: dData, backgroundColor: ['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626','#0f172a','#64748b'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'DISTRIBUCIÓN FEEDBACKS', font: {size: 14, weight: '800'} } } }
+  });
+}
+
+window.onload = update;
+</script>
+</body>
+</html>
